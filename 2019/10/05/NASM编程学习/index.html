@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>NASM编程学习 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content>
+  <meta name="description" content>
+  <script id="hexo-configurations">
+  var CONFIG = {
+    root: '/',
+    theme: 'lx',
+    version: '1.4.5',
+    localsearch:{
+      "enable": false,
+      "trigger": "auto",
+      "top_n_per_article": 1,
+      "unescape": false,
+      "preload": false
+      },
+    path: '-'
+  };
+</script>
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/jquery.jside.menu.js"></script>
+	<script>
+	$(document).ready(function(){
+	$(".menu-container").jSideMenu({
+	    jSidePosition: "position-right",
+	    jSideSticky: true,
+	    jSideSkin: "endless-river",
+	     });
+	}); 
+	</script>
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:300|Noto+Serif+SC&amp;display=swap">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+</head>
+<body>
+<div class="single">
+<div id="page">
+<div id="lx-aside" style="background-image: url(/images/page-cover.jpg)" data-stellar-background-ratio="0.5">
+  <div class="overlay">
+  <div class="page-title">
+    <div class="avatar"><a href="/"><img src="/images/person_1.jpg"></a></div>
+    <span>2019-10-05</span>
+    <h2>NASM编程学习</h2>
+    <div class="tags"><i class="fa fa-tag"></i><a class="tag-link" href="/tags/技术/">技术</a></div>
+    </div>
+</div>
+</div>
+<div id="lx-main-content">
+  <div class="lx-post">
+    <div class="lx-entry padding">
+      <div>
+        <h1 id="NASM编程"><a href="#NASM编程" class="headerlink" title="NASM编程"></a>NASM编程</h1><p> 写这一篇的原因主要是网上关于NASM编程的资料实在是太少了，写这个作业的时候只能一点一点从头看起。就用这篇文章记录一下学习过程吧~</p>
+<a id="more"></a>
+
+<p>平台：Ubuntu</p>
+<p>参考资料：NASM中文手册</p>
+<p>目的：使用NASM写一个可以做大数（0&lt;x,y&lt;10^20）的加法和乘法的程序</p>
+<h2 id="1、学习基本语法"><a href="#1、学习基本语法" class="headerlink" title="1、学习基本语法"></a>1、学习基本语法</h2><h3 id="1-1-从HELLO-WORLD起步"><a href="#1-1-从HELLO-WORLD起步" class="headerlink" title="1.1 从HELLO WORLD起步"></a>1.1 从HELLO WORLD起步</h3><h4 id="1-1-1-section"><a href="#1-1-1-section" class="headerlink" title="1.1.1 section"></a>1.1.1 section</h4><ul>
+<li><p>section.text:代表程序的起始位置，类似c中的main</p>
+</li>
+<li><p>section.bss:没初始化的变量的声明区（预留一部分空间）</p>
+</li>
+<li><p>section.data:初始化的变量的声明区</p>
+</li>
+</ul>
+<h4 id="1-1-2-声明"><a href="#1-1-2-声明" class="headerlink" title="1.1.2 声明"></a>1.1.2 声明</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">section .data</span><br><span class="line">    var1: db 10</span><br><span class="line">    str1: db “Hello World!..”</span><br><span class="line">section .bss</span><br><span class="line">    var3: resb 1</span><br><span class="line">    var4: resq 1</span><br></pre></td></tr></table></figure>
+
+<p>db/dw/dd/dq/dt用来声明已初始化的数据。RESx用于保存一个未初始化的变量，Dx用于声明一个暂时没有类型的变量（使用时确定类型）</p>
+<h4 id="1-1-3-x86的寄存器"><a href="#1-1-3-x86的寄存器" class="headerlink" title="1.1.3 x86的寄存器"></a>1.1.3 x86的寄存器</h4><ul>
+<li><p>EAX：多用于计算，函数的返回值等</p>
+</li>
+<li><p>EBX：内存寻址存放基地址/当前线程的栈底指针？</p>
+</li>
+<li><p>ECX：多用于计数（如循环中）</p>
+</li>
+<li><p>EDX：一般存放整数除法产生的余数</p>
+</li>
+</ul>
+<p>暂时搞不懂这个，直接照着写吧</p>
+<h4 id="1-1-4-尝试编写输出一行“please-input-x-and-y：”"><a href="#1-1-4-尝试编写输出一行“please-input-x-and-y：”" class="headerlink" title="1.1.4 尝试编写输出一行“please input x and y：”"></a>1.1.4 尝试编写输出一行“please input x and y：”</h4><ul>
+<li>代码：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">	section .data</span><br><span class="line">string:	db &apos;please input x and y:&apos;,0Ah ;</span><br><span class="line">length:	equ 23</span><br><span class="line"></span><br><span class="line">	section .bss</span><br><span class="line">var:	resb 1			;</span><br><span class="line">	</span><br><span class="line">	section .text</span><br><span class="line">	global main</span><br><span class="line">main:	mov eax,4		;</span><br><span class="line">	mov ebx,1		;</span><br><span class="line">	mov ecx,string		;</span><br><span class="line">	mov edx,length		;</span><br><span class="line">	int 80h			;</span><br><span class="line">	</span><br><span class="line">	mov eax,1		;</span><br><span class="line">	mov ebx,0		;</span><br><span class="line">	int 80h			;</span><br></pre></td></tr></table></figure>
+
+<p>其实就是把helloworld的代码稍微改了一下，唯一需要注意的一个点是要根据字符串的长度吧length的数字改一下下。</p>
+<ul>
+<li><p>nasm编译命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nasm -f elf64(elf32) hello.asm</span><br><span class="line">gcc -no-pie -o hello hello.o</span><br></pre></td></tr></table></figure>
+
+<p>有时可能需要将文件权限设置为可执行（用chmod命令），执行可执行文件用“./hello”。</p>
+</li>
+</ul>
+<h3 id="1-2-基本指令集学习"><a href="#1-2-基本指令集学习" class="headerlink" title="1.2 基本指令集学习"></a>1.2 基本指令集学习</h3><table>
+<thead>
+<tr>
+<th>x</th>
+<th>意思</th>
+<th>多少bytes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>b</td>
+<td>byte</td>
+<td>1</td>
+</tr>
+<tr>
+<td>w</td>
+<td>word</td>
+<td>2</td>
+</tr>
+<tr>
+<td>d</td>
+<td>double word</td>
+<td>4</td>
+</tr>
+<tr>
+<td>q</td>
+<td>quad word</td>
+<td>8</td>
+</tr>
+<tr>
+<td>t</td>
+<td>ten word</td>
+<td>20</td>
+</tr>
+</tbody></table>
+<p>算数指令：MOV、MOVZX、ADD、SUB、MUL、DIV</p>
+<h4 id="1-2-1-mov"><a href="#1-2-1-mov" class="headerlink" title="1.2.1 mov"></a>1.2.1 mov</h4><ul>
+<li><p>mov eax,[label]：存在label值地址处的值将被复制到eax</p>
+</li>
+<li><p>mov ebx,label：label地址将被复制到ebx]</p>
+</li>
+<li><p>mov eax,ebx：将ebx的内容复制到eax中</p>
+</li>
+<li><p>mov ecx,109：将ecx的值改为109</p>
+</li>
+<li><p>mov byte[var1],al：将寄存器al的值复制到变量var1中</p>
+</li>
+<li><p>mov word[var2],200</p>
+</li>
+<li><p>mov eax,dword[var3]</p>
+</li>
+</ul>
+<p>MOVZX用于将较小数复制到较大数中。无符号拓展，将其余位用0填充。</p>
+<p>被[]括起来的是变量值，不被括起来的是地址 。</p>
+<h4 id="1-2-2-ADD-SUB"><a href="#1-2-2-ADD-SUB" class="headerlink" title="1.2.2 ADD/SUB"></a>1.2.2 ADD/SUB</h4><ul>
+<li><p>add eax,ecx ：eax=eax+ecx，后一个也可以是常数（如5，,31h）</p>
+</li>
+<li><p>sub eax,ecx ：eax=eax-ecx</p>
+</li>
+</ul>
+<h4 id="1-2-3-MUL-DIV"><a href="#1-2-3-MUL-DIV" class="headerlink" title="1.2.3 MUL/DIV"></a>1.2.3 MUL/DIV</h4><ul>
+<li><p>mul src（注意乘法结果的位数是乘数的2倍）</p>
+<ul>
+<li><p>src只有1byte，AX=AL*src</p>
+</li>
+<li><p>src为1word，DX:AX=AZ*src（高16位在DX中，低16位在AX中）</p>
+</li>
+<li><p>src为2word，EDX:EAX=EAX*src（高32位在EDX中，低32位在EAX中）</p>
+</li>
+</ul>
+</li>
+<li><p>div src</p>
+<ul>
+<li><p>src只有1byte，AX/src=AL,余数在AH中</p>
+</li>
+<li><p>src为1word（16bit），(DX:AX)/src=AX，余数在DX中</p>
+</li>
+<li><p>src为2word（32bit），(EDX:EAX)/src=EAX，余数在EDX中</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>个人感觉这样的安排应该跟二进制乘法除法的底层实现有关。</p>
+<h4 id="1-2-4-条件分支指令"><a href="#1-2-4-条件分支指令" class="headerlink" title="1.2.4 条件分支指令"></a>1.2.4 条件分支指令</h4><ul>
+<li><p>JMP label，JMPexit</p>
+</li>
+<li><p>CMP op1，op2（根据op1，op2的比较结果选择跳转）</p>
+</li>
+</ul>
+<h4 id="1-2-5-位运算"><a href="#1-2-5-位运算" class="headerlink" title="1.2.5 位运算"></a>1.2.5 位运算</h4><table>
+<thead>
+<tr>
+<th>运算</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AND/OR/XOR op1，op2</td>
+<td>op1=op1 运算 op2</td>
+</tr>
+<tr>
+<td>NOT op1</td>
+<td>op1=~op1</td>
+</tr>
+<tr>
+<td>TEST op1，op2</td>
+<td>不保存运算结果，结果影响CPUflags</td>
+</tr>
+<tr>
+<td>SHL（左移）/SHR（右移） op1，op2</td>
+<td>将op1左（右）移op2位。op1需是寄存器或内存值，op2需是常量</td>
+</tr>
+<tr>
+<td>ROL/ROR（循环左移/右移）</td>
+<td></td>
+</tr>
+</tbody></table>
+<h4 id="1-2-6-栈操作"><a href="#1-2-6-栈操作" class="headerlink" title="1.2.6 栈操作"></a>1.2.6 栈操作</h4><table>
+<thead>
+<tr>
+<th>运算</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PUSH x（ax或eax）</td>
+<td>每次pushESP均减2（eax减4，ax减2）</td>
+</tr>
+<tr>
+<td>POP x（bx或ebx）</td>
+<td>每次popESP均加2（ebx加4，bx加2）</td>
+</tr>
+<tr>
+<td>PUSHA</td>
+<td></td>
+</tr>
+<tr>
+<td>POPA</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>PUSHA、POPA用于将通用寄存器压栈、出栈，在函数调用时保存现场较为方便</p>
+<h4 id="1-2-7-系统调用"><a href="#1-2-7-系统调用" class="headerlink" title="1.2.7 系统调用"></a>1.2.7 系统调用</h4><ul>
+<li><p>mov eax,1：系统调用号存在eax中</p>
+</li>
+<li><p>mov ebx,0：参数放在其他通用寄存器中</p>
+</li>
+<li><p>int 80h：陷入OS中断</p>
+</li>
+</ul>
+<p>应当使用系统调用进行输入输出操作。系统调用号通过eax寄存器传递，通过int 80h返回并将返回值存入eax。Linux32位中系统调用号中exit为1，读为3，写为4（更多可Google）。</p>
+<ul>
+<li>读的系统调用：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mov eax,3;系统调用号3用于读取</span><br><span class="line">mov ebx,0；来源为键盘</span><br><span class="line">mov ecx,var；内存地址指针（把输入存哪）</span><br><span class="line">mov edx,dword[size]；string的size</span><br><span class="line">int 80h</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>写的系统调用（具体例子可看helloworld例子）：</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mov eax,4；4用于写</span><br><span class="line">mov ebx,1；标准输出设备</span><br><span class="line">mov ecx,msg；指针指向输出字符串</span><br><span class="line">mov edx,size；characters的数量</span><br><span class="line">int 80h；陷入中断</span><br></pre></td></tr></table></figure>
+
+<h4 id="1-2-8-函数调用（CALL-amp-RET）"><a href="#1-2-8-函数调用（CALL-amp-RET）" class="headerlink" title="1.2.8 函数调用（CALL&amp;RET）"></a>1.2.8 函数调用（CALL&amp;RET）</h4><ul>
+<li><p>利用寄存器传递参数，然后用call调用函数，call命令自动保存函数的返回地址，RET自动恢复返回地址。</p>
+</li>
+<li><p>记得在函数中可能要利用栈保存寄存器现场</p>
+</li>
+</ul>
+<h2 id="2-试着开始写代码啦"><a href="#2-试着开始写代码啦" class="headerlink" title="2.试着开始写代码啦~"></a>2.试着开始写代码啦~</h2><h3 id="2-1-NASM如何进行调试"><a href="#2-1-NASM如何进行调试" class="headerlink" title="2.1 NASM如何进行调试"></a>2.1 NASM如何进行调试</h3><p>在Linux下调试nasm使用gdb，一些细节如下：</p>
+<p>生成可执行文件后，进入gdb（注意源代码需要有main才能编译成功）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gdb hello</span><br></pre></td></tr></table></figure>
+
+<p>然后设置断点(如在main处设置断点)，然后运行程序,查看寄存器值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">b main</span><br><span class="line">r</span><br><span class="line">info registers</span><br></pre></td></tr></table></figure>
+
+<p>使用nexti或next继续下一条指令/语句</p>
+<p>如果有需要知道的指令，使用help命令即可。</p>
+
+      </div>
+    </div>
+  </div>
+</div>
+<div class="lx-navigation">
+	<div class="lx-cover prev lx-cover-sm" style="background-image: url(/images/footer_1.jpg)">
+		<div class="overlay"></div>
+		<a class="copy" href="#">
+			<div class="display-t">
+				<div class="display-tc">
+					<div>
+						<span>Next</span>
+						<h3>没有更新的文章</h3>
+					</div>
+				</div>
+			</div>
+		</a>
+	</div>
+        <div class="lx-cover next lx-cover-sm" style="background-image: url(/images/footer_2.jpg)">
+		<div class="overlay"></div>
+		<a class="copy" href="/2019/10/05/叨逼叨-清晨随想/">
+			<div class="display-t">
+				<div class="display-tc">
+					<div>
+						<span>Prev</span>
+						<h3>'叨逼叨-清晨随想'</h3>
+					</div>
+				</div>
+			</div>
+		</a>
+	</div>
+</div>
+</div>
+
+<footer>
+  <div>
+  Copyright &copy; 2019.<a href="/">Hexo</a><br>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme <a href="https://lx.blleng.cn" target="_blank">Lx</a><br>
+  </div>
+</footer>
+</div>
+
+<button class="menu-trigger"></button>
+<div class="menu">
+  <div class="menu-head">
+    <span class="layer">
+      <div class="col">
+        <div class="row for-pic">
+          <div class="profile-pic">
+            <a href="/"><img src="/images/person_1.jpg" alt="John Doe"></a>
+          </div>
+        </div>
+        <div class="row for-name">
+          <p>John Doe</p>
+          <span class="tagline">Hello, World!</span>
+        </div>
+      </div>
+    </span>
+  </div>
+  <nav class="menu-container">
+  <ul class="menu-items">
+    <li><a href="/"><i class="fa fa-home fa-fw"></i>首页</a></li>
+    <li><a href="/archives/"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+    <li class="has-sub"><span class="dropdown-heading">
+      <i class="fa fa-bookmark fa-fw"></i>页面</span>
+        <ul>
+          <li><a href="/guestbook">留言</a></li>
+        <li><a href="/about">关于</a></li>
+        </ul>
+    </li>
+    <li class="has-sub"><span class="dropdown-heading">
+      <i class="fa fa-link fa-fw"></i>友链</span>
+        <ul>
+          <li> <a href="https://lx.blleng.cn" target="_blank">Theme-Lx</a></li>
+        </ul>
+    </li>
+  </ul>
+  </nav>
+</div>
+
+<div class="gototop js-top">
+  <a href="#" class="js-gotop"><i class="fa fa-arrow-up"></i></a>
+</div>
+<script src="/js/jquery.easing.min.js"></script>
+<script src="/js/jquery.waypoints.min.js"></script>
+<script src="/js/jquery.stellar.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+</body>
+</html>
