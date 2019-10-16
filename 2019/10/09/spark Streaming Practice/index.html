@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>spark Practice | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content>
+  <meta name="description" content>
+  <script id="hexo-configurations">
+  var CONFIG = {
+    root: '/',
+    theme: 'lx',
+    version: '1.4.5',
+    localsearch:{
+      "enable": false,
+      "trigger": "auto",
+      "top_n_per_article": 1,
+      "unescape": false,
+      "preload": false
+      },
+    path: '-'
+  };
+</script>
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="/js/jquery.min.js"></script>
+  <script src="/js/jquery.jside.menu.js"></script>
+	<script>
+	$(document).ready(function(){
+	$(".menu-container").jSideMenu({
+	    jSidePosition: "position-right",
+	    jSideSticky: true,
+	    jSideSkin: "endless-river",
+	     });
+	}); 
+	</script>
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:300|Noto+Serif+SC&amp;display=swap">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+</head>
+<body>
+<div class="single">
+<div id="page">
+<div id="lx-aside" style="background-image: url(/images/page-cover.jpg)" data-stellar-background-ratio="0.5">
+  <div class="overlay">
+  <div class="page-title">
+    <div class="avatar"><a href="/"><img src="/images/person_1.jpg"></a></div>
+    <span>2019-10-09</span>
+    <h2>spark Practice</h2>
+    <div class="tags"><i class="fa fa-tag"></i><a class="tag-link" href="/tags/云计算/">云计算</a></div>
+    </div>
+</div>
+</div>
+<div id="lx-main-content">
+  <div class="lx-post">
+    <div class="lx-entry padding">
+      <div>
+        <p>用python爬取网易云音乐的歌单类型、名称、创建时间</p>
+<p>写这个就纯粹是瞎混，啥子也不会</p>
+<a id="more"></a>
+
+<h1 id="spark-streaming实践"><a href="#spark-streaming实践" class="headerlink" title="spark streaming实践"></a>spark streaming实践</h1><h2 id="1-用python爬取CSV格式的数据"><a href="#1-用python爬取CSV格式的数据" class="headerlink" title="1 用python爬取CSV格式的数据"></a>1 用python爬取CSV格式的数据</h2><h3 id="1-1-爬取歌单"><a href="#1-1-爬取歌单" class="headerlink" title="1.1 爬取歌单"></a>1.1 爬取歌单</h3><p>该段代码爬取所有网易云音乐的所有歌单的名称、网址、播放量、日期</p>
+<ul>
+<li>headers貌似是发送请求时的啥子协定（HTTP协议）</li>
+<li>url里面的cat参数是歌单分类，id是歌单id，limit参数(每页显示的专辑数量)，offset参数(当前页)（35++的跳）。</li>
+<li>歌单貌似只有38页，38*35=1330，所以参数是0~1300</li>
+<li>结果写到一个CSV文件中</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">import csv</span><br><span class="line">from lxml import html</span><br><span class="line">import requests</span><br><span class="line">from multiprocessing.dummy import Pool</span><br><span class="line">import time</span><br><span class="line">etree=html.etree</span><br><span class="line">headers = &#123;</span><br><span class="line">&apos;Referer&apos;:&apos;http://music.163.com/&apos;,</span><br><span class="line">&apos;Host&apos;:&apos;music.163.com&apos;,</span><br><span class="line"># &apos;User-Agent&apos;:&apos;Mozilla/5.0 (X11: Linux *86_64; rv:38.0) Gecko/20100101 Firefox/38.0 Iceweasel/38.3.0&apos;,</span><br><span class="line">    &apos;User-Agent&apos;: &apos;Mozilla/5.0 (X11: Linux *86_64; rv:38.0) Gecko/20100101 Firefox/38.0 Iceweasel/38.3.0&apos;,</span><br><span class="line"></span><br><span class="line">    &apos;Accept&apos;:&apos;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&apos;,</span><br><span class="line">&#125;</span><br><span class="line">wangyi=&apos;http://music.163.com&apos;</span><br><span class="line">#base_url是歌单的url</span><br><span class="line">#limit是每一页显示的歌单数量</span><br><span class="line">#offset</span><br><span class="line">#金属：%E9%87%91%E5%B1%9E</span><br><span class="line">#全部：%E5%85%A8%E9%83%A8</span><br><span class="line">base_url=&apos;http://music.163.com/discover/playlist/?order=hot&amp;cat=%E4%B9%A1%E6%9D%91&amp;limit=35&amp;offset=&#123;&#125;&apos;</span><br><span class="line">urlList=[]      #保存构造出的链接</span><br><span class="line">def totalPage():</span><br><span class="line">    for i in range(0,1300,35):</span><br><span class="line">        url=base_url.format(i)</span><br><span class="line">        urlList.append(url)</span><br><span class="line"></span><br><span class="line">def getData(url):</span><br><span class="line">    r=requests.get(url,headers=headers)</span><br><span class="line">    html=etree.HTML(r.text)#该分类的界面</span><br><span class="line">    MFlist=html.xpath(&quot;//p[@class=&apos;dec&apos;]/a/text()&quot;)#歌单名</span><br><span class="line">    MFurl=html.xpath(&quot;//p[@class=&apos;dec&apos;]/a/@href&quot;)#歌单链接</span><br><span class="line">    LisNum=html.xpath(&quot;//span[@class=&apos;nb&apos;]/text()&quot;)#歌单播放次数</span><br><span class="line">    for i in range(len(MFlist)):</span><br><span class="line"></span><br><span class="line">        rDate = requests.get(wangyi + MFurl[i],headers=headers)</span><br><span class="line">        htmlDate=etree.HTML(rDate.text)#歌单链接</span><br><span class="line">        Date=htmlDate.xpath(&quot;//span[@class=&apos;time s-fc4&apos;]/text()&quot;)#歌单创建日期#生成结果是一个节点集合</span><br><span class="line"></span><br><span class="line">        write.writerow([MFlist[i],wangyi+MFurl[i],LisNum[i],Date[0]])#写数据</span><br><span class="line">    time.sleep(3)   #延时，防止IP被封</span><br><span class="line"></span><br><span class="line">f=open(&apos;Allmusicform.csv&apos;,&apos;w+&apos;,newline=&apos;&apos;,encoding=&apos;utf-8&apos;)#a+：往后追加，w+：重新写入</span><br><span class="line">write=csv.writer(f)</span><br><span class="line">p=Pool(5)</span><br><span class="line">totalPage()</span><br><span class="line">p.map(getData,urlList)</span><br><span class="line">p.close()</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-遇到的问题"><a href="#1-2-遇到的问题" class="headerlink" title="1.2 遇到的问题"></a>1.2 遇到的问题</h3><p>第二天运行代码的时候就报错了，也不知为个啥</p>
+<p>解决了也不知道为个啥，就是getRequest加了个headers=headers</p>
+<p>我现在算是明白了，写程序的哲学就是瞎搞</p>
+<h2 id="2-spark-streaming"><a href="#2-spark-streaming" class="headerlink" title="2 spark streaming"></a>2 spark streaming</h2><p>安装MongoDB、JAVA、Scala、spark（若在Linux下则可使用MongoDB connector for Apache spark 其他就自己写一个连接器）</p>
+<p>流程如下：</p>
+<ul>
+<li><p>将爬下来的CSV文件导入MongoDB</p>
+</li>
+<li><p>在IJ中建一个maven依赖的Scala项目</p>
+</li>
+<li><p>把pom.xml文件中加上Hadoop和spark的依赖</p>
+</li>
+<li><p>写Scala程序处理数据</p>
+</li>
+<li><p>用Jupiter或者JavaScript做可视化</p>
+</li>
+</ul>
+<h1 id="spark-graphX实践"><a href="#spark-graphX实践" class="headerlink" title="spark graphX实践"></a>spark graphX实践</h1><p>数据还是之前的数据，只不过要生成一个可视化的图</p>
+<p>步骤如下：</p>
+<ul>
+<li>写Scala代码从TXT中读取RDD（将CSV文件转为txt格式，UTF-8编码）</li>
+<li>将图生成gexf格式的xml文件</li>
+<li>用gephi读取文件并做处理</li>
+</ul>
+<p>代码如下（Scala）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line">package org.mongodb.spark</span><br><span class="line"></span><br><span class="line">import java.io._</span><br><span class="line">import org.apache.spark._</span><br><span class="line">import org.apache.spark.graphx._</span><br><span class="line">// To make some of the examples work we will also need RDD</span><br><span class="line">import org.apache.spark.rdd.RDD</span><br><span class="line">import org.apache.spark.SparkContext</span><br><span class="line">import org.apache.spark.SparkContext._</span><br><span class="line">import org.apache.spark.SparkConf</span><br><span class="line">// 字符串转码，解决乱码问题</span><br><span class="line">import java.nio.charset.StandardCharsets</span><br><span class="line"></span><br><span class="line">import scala.io.Source</span><br><span class="line">import collection.mutable.ArrayBuffer</span><br><span class="line"></span><br><span class="line">object App &#123;</span><br><span class="line">  def main(args: Array[String]): Unit = &#123;</span><br><span class="line">    val conf = new SparkConf()</span><br><span class="line">    conf.setAppName(&quot;Simple Application&quot;)</span><br><span class="line">    conf.setMaster(&quot;local&quot;)</span><br><span class="line">    val sc = new SparkContext(conf)</span><br><span class="line"></span><br><span class="line">    val vertexArr = new ArrayBuffer[(Long, String)]()</span><br><span class="line">    val edgeArr = new ArrayBuffer[Edge[String]]()</span><br><span class="line"></span><br><span class="line">    // 读入时指定编码</span><br><span class="line">    val sourceV = Source.fromFile(&quot;D://5gedanCSV.txt&quot;, &quot;UTF-8&quot;)</span><br><span class="line">    val lines = sourceV.getLines()</span><br><span class="line"></span><br><span class="line">    vertexArr += ((0, &quot;摇滚&quot;))</span><br><span class="line">    vertexArr += ((1, &quot;民谣&quot;))</span><br><span class="line">    vertexArr += ((2, &quot;说唱&quot;))</span><br><span class="line">    vertexArr += ((3, &quot;轻音乐&quot;))</span><br><span class="line">    vertexArr += ((4, &quot;NewAge&quot;))</span><br><span class="line">    // var i = 0</span><br><span class="line">    while(lines.hasNext)&#123;</span><br><span class="line">      val pp = lines.next().split(&quot;,&quot;)</span><br><span class="line">      vertexArr += ((pp(0).toLong, pp(0)))//change id and name</span><br><span class="line">      edgeArr += Edge(pp(0).toLong, pp(1).toLong, &quot;1&quot;)</span><br><span class="line">    &#125;</span><br><span class="line">    //println(vertexArr.length)</span><br><span class="line"></span><br><span class="line">    // 创建点RDD</span><br><span class="line">    val users: RDD[(VertexId, String)] = sc.parallelize(vertexArr)</span><br><span class="line"></span><br><span class="line">    // 创建边RDD</span><br><span class="line">    val relationships: RDD[Edge[String]] = sc.parallelize(edgeArr)</span><br><span class="line"></span><br><span class="line">    // 定义一个默认用户，避免有不存在用户的关系</span><br><span class="line">    val graph = Graph(users, relationships)</span><br><span class="line"></span><br><span class="line">    // 输出Graph的信息</span><br><span class="line">    graph.vertices.collect().foreach(println(_))</span><br><span class="line"></span><br><span class="line">    graph.triplets.map(triplet =&gt; triplet.srcAttr + &quot;-----&gt;&quot; + triplet.dstAttr + &quot;    attr:&quot; + triplet.attr).collect().foreach(println(_))</span><br><span class="line"></span><br><span class="line">    val writer = new PrintWriter(new File(&quot;test.gexf&quot; ))</span><br><span class="line"></span><br><span class="line">    writer.write(toGexf(graph))</span><br><span class="line">    writer.close()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  def toGexf[VD,ED](g:Graph[VD,ED]) : String = &#123;</span><br><span class="line">    val string = &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\n&quot; +</span><br><span class="line">      &quot;&lt;gexf xmlns=\&quot;http://www.gexf.net/1.2draft\&quot; version=\&quot;1.2\&quot;&gt;\n&quot; +</span><br><span class="line">      &quot; &lt;graph mode=\&quot;static\&quot; defaultedgetype=\&quot;directed\&quot;&gt;\n&quot; +</span><br><span class="line">      &quot; &lt;nodes&gt;\n&quot; +</span><br><span class="line">      g.vertices.map(v =&gt; &quot; &lt;node id=\&quot;&quot; + v._1 + &quot;\&quot; label=\&quot;&quot; +</span><br><span class="line">        v._2 + &quot;\&quot; /&gt;\n&quot;).collect.mkString +</span><br><span class="line">      &quot; &lt;/nodes&gt;\n&quot; +</span><br><span class="line">      &quot; &lt;edges&gt;\n&quot; +</span><br><span class="line">      g.edges.map(e =&gt; &quot; &lt;edge source=\&quot;&quot; + e.srcId +</span><br><span class="line">        &quot;\&quot; target=\&quot;&quot; + e.dstId + &quot;\&quot; label=\&quot;&quot; + e.attr +</span><br><span class="line">        &quot;\&quot; /&gt;\n&quot;).collect.mkString +</span><br><span class="line">      &quot; &lt;/edges&gt;\n&quot; +</span><br><span class="line">      &quot; &lt;/graph&gt;\n&quot; +</span><br><span class="line">      &quot;&lt;/gexf&gt;&quot;</span><br><span class="line">    return string</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>万万没想到，我们不仅要搞数据那些乱七八糟的东西，还要作图，文件直接导入就是一个正方形类似二维码的图，处理过程如下：</p>
+<ul>
+<li>用布局中的Fruchterman Reingold算法用重力加速度将图甩成一个类似圆形的稀疏一点的图</li>
+<li>对点和边重新着色</li>
+</ul>
+
+      </div>
+    </div>
+  </div>
+</div>
+<div class="lx-navigation">
+	<div class="lx-cover prev lx-cover-sm" style="background-image: url(/images/footer_1.jpg)">
+		<div class="overlay"></div>
+		<a class="copy" href="/2019/10/16/c-学习指南/">
+			<div class="display-t">
+				<div class="display-tc">
+					<div>
+						<span>Next</span>
+						<h3>'c++学习指南'</h3>
+					</div>
+				</div>
+			</div>
+		</a>
+	</div>
+        <div class="lx-cover next lx-cover-sm" style="background-image: url(/images/footer_2.jpg)">
+		<div class="overlay"></div>
+		<a class="copy" href="/2019/10/06/Big-Data-Systems/">
+			<div class="display-t">
+				<div class="display-tc">
+					<div>
+						<span>Prev</span>
+						<h3>Big Data Systems</h3>
+					</div>
+				</div>
+			</div>
+		</a>
+	</div>
+</div>
+</div>
+
+<footer>
+  <div>
+  Copyright &copy; 2019.<a href="/">Hexo</a><br>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme <a href="https://lx.blleng.cn" target="_blank">Lx</a><br>
+  </div>
+</footer>
+</div>
+
+<button class="menu-trigger"></button>
+<div class="menu">
+  <div class="menu-head">
+    <span class="layer">
+      <div class="col">
+        <div class="row for-pic">
+          <div class="profile-pic">
+            <a href="/"><img src="/images/person_1.jpg" alt="John Doe"></a>
+          </div>
+        </div>
+        <div class="row for-name">
+          <p>John Doe</p>
+          <span class="tagline">Hello, World!</span>
+        </div>
+      </div>
+    </span>
+  </div>
+  <nav class="menu-container">
+  <ul class="menu-items">
+    <li><a href="/"><i class="fa fa-home fa-fw"></i>首页</a></li>
+    <li><a href="/archives/"><i class="fa fa-archive fa-fw"></i>归档</a></li>
+    <li class="has-sub"><span class="dropdown-heading">
+      <i class="fa fa-bookmark fa-fw"></i>页面</span>
+        <ul>
+          <li><a href="/guestbook">留言</a></li>
+        <li><a href="/about">关于</a></li>
+        </ul>
+    </li>
+    <li class="has-sub"><span class="dropdown-heading">
+      <i class="fa fa-link fa-fw"></i>友链</span>
+        <ul>
+          <li> <a href="https://lx.blleng.cn" target="_blank">Theme-Lx</a></li>
+        </ul>
+    </li>
+  </ul>
+  </nav>
+</div>
+
+<div class="gototop js-top">
+  <a href="#" class="js-gotop"><i class="fa fa-arrow-up"></i></a>
+</div>
+<script src="/js/jquery.easing.min.js"></script>
+<script src="/js/jquery.waypoints.min.js"></script>
+<script src="/js/jquery.stellar.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+</body>
+</html>
