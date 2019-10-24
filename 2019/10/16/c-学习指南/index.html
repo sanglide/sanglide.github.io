@@ -50,7 +50,7 @@
     <div class="avatar"><a href="/"><img src="/images/person_1.jpg"></a></div>
     <span>2019-10-16</span>
     <h2>'c++学习指南'</h2>
-    
+    <div class="tags"><i class="fa fa-tag"></i><a class="tag-link" href="/tags/编程/">编程</a></div>
     </div>
 </div>
 </div>
@@ -58,7 +58,26 @@
   <div class="lx-post">
     <div class="lx-entry padding">
       <div>
-        
+        <h1 id="part1"><a href="#part1" class="headerlink" title="part1"></a>part1</h1><h2 id="Data-Structure-Algorithm"><a href="#Data-Structure-Algorithm" class="headerlink" title="Data Structure + Algorithm"></a>Data Structure + Algorithm</h2><h3 id="1-表驱动"><a href="#1-表驱动" class="headerlink" title="1. 表驱动"></a>1. 表驱动</h3><p><a href="https://blog.csdn.net/zhouyulu/article/details/6860893" target="_blank" rel="noopener">csdn解说</a></p>
+<p>对于依据<strong>关键字</strong>选择<strong>执行代码</strong>switch-case与if-else语句块，当选择较多时维护性变差。选择表驱动来优化。</p>
+<p>对于switch-case与if-else语句块，有三个变化点：</p>
+<ol>
+<li><p>将关键字与处理代码关联；</p>
+</li>
+<li><p>以关键字选择分支，执行处理代码；</p>
+</li>
+<li><p>实现关键字的处理代码；</p>
+</li>
+</ol>
+<p>在表驱动中：</p>
+<ol>
+<li><p>将变化点2做成一个[关键字:处理函数]的映射结构，在独立函数中赋值</p>
+</li>
+<li><p>将变化点三，做成一个查找关键字，执行对应函数的简单函数。（更加抽象，易于维护）</p>
+</li>
+</ol>
+<p>ppt中的例子将结构做成一个结构体，实际中也可以用map；ppt中还使用一个enum类型将数字与文字对应，使代码可读性更高。</p>
+
       </div>
     </div>
   </div>
@@ -66,12 +85,12 @@
 <div class="lx-navigation">
 	<div class="lx-cover prev lx-cover-sm" style="background-image: url(/images/footer_1.jpg)">
 		<div class="overlay"></div>
-		<a class="copy" href="#">
+		<a class="copy" href="/2019/10/21/my-life/">
 			<div class="display-t">
 				<div class="display-tc">
 					<div>
 						<span>Next</span>
-						<h3>没有更新的文章</h3>
+						<h3>my life</h3>
 					</div>
 				</div>
 			</div>
@@ -79,12 +98,12 @@
 	</div>
         <div class="lx-cover next lx-cover-sm" style="background-image: url(/images/footer_2.jpg)">
 		<div class="overlay"></div>
-		<a class="copy" href="/2019/10/09/spark Streaming Practice/">
+		<a class="copy" href="/2019/10/06/Big-Data-Systems/">
 			<div class="display-t">
 				<div class="display-tc">
 					<div>
 						<span>Prev</span>
-						<h3>spark Practice</h3>
+						<h3>Big Data Systems</h3>
 					</div>
 				</div>
 			</div>
